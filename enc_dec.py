@@ -26,7 +26,8 @@ def conv_and_encode(witprog, version, hrp):
 def encode_str(str):
     #str = input("Enter String to Encode:")
     hrp = "bc"
-    version = int(input("Enter Version:"))
+    #version = int(input("Enter Version:"))      Version input to be taken from user-Phase3
+    version=1
     if version in range(1, 17):
         enc_data=bytes.fromhex(str)
         bytes_dt = calc_hash(enc_data)
