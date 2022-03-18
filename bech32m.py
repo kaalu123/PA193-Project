@@ -20,17 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""The function bech32_polymod(),bech32_hrp_expand(),bech32_verify_checksum(), bech32m_create_checksum() & convertbits()
+ have been taken from Reference implementation[1] and modified to cater for pure bech32m encoding/decoding only"""
+
+import base64
 import sys
 
-"""Reference implementation for Bech32/Bech32m and segwit addresses."""
-from enum import Enum
-
-class Encoding(Enum):
-    """Enumeration type to list the various supported encodings."""
-    BECH32 = 1
-    BECH32M = 2
-
-CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 BECH32M_CONST = 0x2bc830a3
 
 def bech32_polymod(values):
@@ -51,12 +46,10 @@ def bech32_hrp_expand(hrp):
 def bech32_verify_checksum(hrp, data):
     """Verify a checksum given HRP and converted data characters."""
     const = bech32_polymod(bech32_hrp_expand(hrp) + data)
-    if const == 1:
-        print("Invalid checksum!!! address not bech32m encoded. Please enter bech32m encoded address")
-        sys.exit()
     if const == BECH32M_CONST:
-        print("valid Checksum")
-        return Encoding.BECH32M
+        return 1
+    else:
+        print("Invalid checksum!!! address not bech32m encoded")
     return None
 
 def bech32m_create_checksum(hrp, data):
@@ -72,6 +65,7 @@ def convertbits(data, frombits, tobits, pad=True):
     ret = []
     maxv = (1 << tobits) - 1
     max_acc = (1 << (frombits + tobits - 1)) - 1
+
     for value in data:
         if value < 0 or (value >> frombits):
             return None
@@ -87,54 +81,71 @@ def convertbits(data, frombits, tobits, pad=True):
         return None
     return ret
 
-def bech32_decode(bech):
-    """Validate a Bech32/Bech32m string, and determine HRP and data."""
-    if ((any(ord(x) < 33 or ord(x) > 126 for x in bech)) or
-            (bech.lower() != bech and bech.upper() != bech)):
-        return (None, None, None)
-    bech = bech.lower()
-    pos = bech.rfind('1')
-    if pos < 1 or pos + 7 > len(bech) or len(bech) > 90:
-        return (None, None, None)
-    if not all(x in CHARSET for x in bech[pos+1:]):
-        return (None, None, None)
-    hrp = bech[:pos]
-    data = [CHARSET.find(x) for x in bech[pos+1:]]
-    spec = bech32_verify_checksum(hrp, data)
-    if spec is None:
-        return (None, None, None)
-    return (hrp, data[:-6], spec)
+def check_if_str_is_hex(str):
+    for char in str:
+        if ((char < '0' or char > '9') and
+                (char < 'A' or char > 'F')):
+            print("Non Hex Character Entered in String")
+            return False
+        else:
+            return True
 
-def decode(hrp, addr):
-    """Decode a segwit address."""
-    hrpgot, data, spec = bech32_decode(addr)
-    if hrpgot != hrp:
-        return (None, None)
-    decoded = convertbits(data[1:], 5, 8, False)
-    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
-        return (None, None)
-    if data[0] > 16:
-        return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
-        return (None, None)
-    if data[0] == 0 and spec != Encoding.BECH32 or data[0] != 0 and spec != Encoding.BECH32M:
-        return (None, None)
-    return (data[0], decoded)
+def ASCIItoHEX(ascii):
+    hexa = ""
+    for i in range(len(ascii)):
+        ch = ascii[i]
+        in1 = ord(ch)
+        part = hex(in1).lstrip("0x").rstrip("L")
+        hexa += part
+    return hexa
 
-def decode_32m(hrp, addr):
-    """Decode a segwit address."""
-    hrpgot, data, spec = bech32_decode(addr)
-    if hrpgot != hrp:
-        return (None, None)
-    decoded = convertbits(data[1:], 5, 8, False)
-    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
-        return (None, None)
-    if data[0] > 16:
-        return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
-        return (None, None)
-    #if data[0] == 0 and spec != Encoding.BECH32 or data[0] != 0 and spec != Encoding.BECH32M:
-    #if data[0] != 0 and spec != Encoding.BECH32M:
-    if data[0] != 0 and spec != 2:
-        return (None, None)
-    return (data[0], decoded)
+def base64_to_hex(base64_str):
+    decoded_str = base64.b64decode(base64_str.encode('utf-8')).hex()
+    return decoded_str
+
+def hex_to_base64(hex_str):
+    return base64.b64encode(bytes.fromhex(hex_str)).decode()
+
+def bin_to_bytes(bin_str):
+    return int(bin_str, 2).to_bytes((len(bin_str) + 7) // 8, byteorder='big')
+
+
+def output_format_fn(decoded_str, out_format):
+    list_to_hex = ([hex(x).lstrip("0x") for x in decoded_str])
+    decoded_str_in_hex = ''.join(map(str, list_to_hex))
+
+    if out_format == "hex":
+        print("decoded_str_in_hex=", decoded_str_in_hex)
+        return decoded_str_in_hex
+
+    if out_format == "base64":
+        print("decoded_str_in_base64=", hex_to_base64(decoded_str_in_hex))
+        return hex_to_base64(decoded_str_in_hex)
+
+def read_file(input_file_name):
+    try:
+        with open(input_file_name, 'r') as f:
+            input_data = f.read()
+
+        if not input_data:
+            print("No Data found in file :" + input_file_name)
+            return None
+        else:
+            return input_data
+
+    except IOError as e:
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
+
+    except:  # handle other exceptions such as attribute errors
+        print("Unexpected error:", sys.exc_info()[0])
+
+def write_file(output_file_name, output_data):
+    try:
+        with open(output_file_name,'w') as f:
+            f.write(output_data)
+
+    except IOError as e:
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
+
+    except:  # handle other exceptions such as attribute errors
+        print("Unexpected error:", sys.exc_info()[0])
