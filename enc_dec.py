@@ -1,119 +1,195 @@
 import bech32m
+import sys
+from colorama import init, Fore, Style
 
+init(autoreset=True)  # Initializes colorama
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
-def validate_str_for_encoding(hrp,str,input_format):
-    if(83 <len(hrp) < 1):
+
+def validate_hrp(hrp):
+    if hrp == "":
+        print("HRP cannot be null/empty")
+        return False
+
+    if len(hrp) > 83:
         print("Invalid Length of HRP. Enter Valid HRP string of length between 1 and 83")
+        return False
 
     for x in hrp:
-        if (ord(x) < 33 or ord(x) > 126):
+        if ord(x) < 33 or ord(x) > 126:
             print("Invalid character in HRP. Character should have ASCII Value between 33 and 126(both inclusive")
+            return False
+        else:
+            return True
 
-    if input_format=="-hex":
-        validated_str=bytes.fromhex(str)
-    elif input_format=="ascii":
-        hex_str=bech32m.ASCIItoHEX(str)
-        validated_str=bytes.fromhex(hex_str)
-    elif input_format=="-b64":
-        hex_str= bech32m.base64_to_hex(str)
-        validated_str=bytes.fromhex(hex_str)
-    elif input_format=="raw":
-        validated_str=str
-    elif input_format=="-bin":
-        validated_str=bech32m.bin_to_bytes(str)
+
+def validate_str_for_encoding(hrp, input_str, input_format):
+    if validate_hrp(hrp):
+
+        if input_format == "hex":
+            if bech32m.check_if_str_is_hex(input_str) or input_str == "":
+                validated_str = bytes.fromhex(input_str.lower())
+                return validated_str
+            else:
+                print("Invalid hex String")
+                return False
+
+        elif input_format == "b64":
+            if bech32m.check_if_str_is_base64(input_str) or input_str == "":
+                hex_str = bech32m.base64_to_hex(input_str)
+                validated_str = bytes.fromhex(hex_str)
+                return validated_str
+            else:
+                print("Invalid b64 String")
+                return False
+
+        elif input_format == "bin":
+            if bech32m.check_if_str_is_bin(input_str) or input_str == "":
+                validated_str = input_str
+                return validated_str
+            else:
+                print("Invalid bin String")
+                return False
+        else:
+            print("Invalid Input Format!!!. Input string should be in \"hex\", \"b64\" or \"bin\"")
+            return None
     else:
-        print("Invalid Input Format!!!. Input string should be in HEX, BASE64, ASCII or BIN")
-        return None
-    return validated_str
+        sys.exit(0)
 
-def validate_str_for_decoding(str):
 
-    for x in str:
-        if (ord(x) < 33 or ord(x) > 126):
-            print("Invalid character in HRP. Character should have ASCII Value between 33 and 126(both inclusive")
+def detect_errors(hrp, data_str):
+    print("Checking for Corrections in Input String")
+    for i in range(0, len(data_str)):
+        check_char = data_str[i]
 
-    bech32m_str = str.lower()
+        for correct_char in range(0, 32):
+            if correct_char == check_char:
+                continue
+            data_str[i] = correct_char
+            spec = bech32m.bech32_verify_checksum(hrp, data_str)
+
+            if spec == 1:
+                final_ret = hrp + '1' + ''.join([CHARSET[d] for d in data_str])
+                return final_ret
+
+        data_str[i] = check_char
+
+
+def print_corrections(input_str, correct_str):
+    if correct_str is None:
+        print("Correct Character Not Found. Possibly more than one incorrect character in input string")
+        sys.exit(0)
+
+    for i in range(len(input_str)):
+        if input_str[i] == correct_str[i]:
+            i += 1
+        else:
+            print("Incorrect Character Found:",
+                  (Style.BRIGHT + Fore.WHITE + input_str[:i]) + (Style.BRIGHT + Fore.RED + input_str[i])
+                  + (Style.BRIGHT + Fore.WHITE + input_str[i + 1:]))
+            print("Correct Character is:", correct_str[i])
+            print("Correct String is:",
+                  (Style.BRIGHT + Fore.WHITE + correct_str[:i]) + (Style.BRIGHT + Fore.GREEN + correct_str[i])
+                  + (Style.BRIGHT + Fore.WHITE + correct_str[i + 1:]))
+
+            sys.exit(0)
+
+
+def validate_str_for_decoding(input_str, input_format):
+    if input_str == "":
+        print("Input string cannot be empty for decoding")
+        sys.exit(0)
+
+    if input_format == "b64":
+        if bech32m.check_if_str_is_base64(input_str):
+            input_str = bech32m.hex_to_ascii(bech32m.base64_to_hex(input_str))
+        else:
+            print("Invalid b64 String")
+            return False
+
+    if input_format == "hex":
+        if bech32m.check_if_str_is_hex(input_str):
+            input_str = bech32m.hex_to_ascii(input_str)
+        else:
+            print("Invalid hex String")
+            return False
+
+    if input_format == "bin":
+        if bech32m.check_if_str_is_bin(input_str):
+            input_str = bech32m.hex_to_ascii(bech32m.raw_to_hex(input_str))
+        else:
+            print("Invalid bin String")
+            return False
+
+    for x in input_str:
+        if ord(x) < 33 or ord(x) > 126:
+            print("Invalid character in string. Character should have ASCII Value between 33 and 126(both inclusive)")
+            sys.exit(0)
+
+    bech32m_str = input_str.lower()
     pos = bech32m_str.rfind('1')
-    if pos < 1 or pos + 7 > len(str) or len(str) > 90:
-        print("Invalid Length of bech32m string. Enter valid bech32m string")
 
-    hrp =bech32m_str[:pos]
+    if pos == -1:
+        print("Separator not found in bech32m string")
+        sys.exit(0)
+
+    if pos < 1 or pos + 7 > len(bech32m_str) or len(bech32m_str) > 90:
+        print("Invalid Length of bech32m string. Enter valid bech32m string")
+        sys.exit(0)
+
+    data_part = bech32m_str[pos + 1:]
+
+    if len(data_part) < 6:
+        print("Invalid Length of Data Part")
+        sys.exit(0)
+
+    if not all(x in CHARSET for x in data_part):
+        print("Invalid character in Data Part of Bech32m String")
+        sys.exit(0)
+
+    hrp = bech32m_str[:pos]
     data = [CHARSET.find(x) for x in bech32m_str[pos + 1:]]
     spec = bech32m.bech32_verify_checksum(hrp, data)
 
     if spec is None:
-        print("Invalid Checksum")
-        return None
+        print("Checksum Failed")
+        correct_str = detect_errors(hrp, data)
+        print_corrections(input_str, correct_str)
     else:
-        return (hrp, data[:-6])
-
-#to encode pure bech32m
-def encode_pure_bech32m(hrp, str, format):
-
-    validated_str = validate_str_for_encoding(hrp, str, format)
-    bits_converted = bech32m.convertbits(validated_str, 8, 5)
-    combined = bits_converted + bech32m.bech32m_create_checksum(hrp, bits_converted)
-    final_ret = hrp + '1' + ''.join([CHARSET[d] for d in combined])
-    print("Encoded str=",final_ret)
-    #if decode_pure_bech32m(hrp, final_ret) == None:
-    #   return None
-    return final_ret
-
-def decode_pure_bech32m(hrp, str_to_decode, out_form,):
-    hrpgot, data = validate_str_for_decoding(str_to_decode)
-
-    if hrpgot != hrp:
-        print("Invalid HRP provided for decoding, Does not match with HRP calculated from string")
-        return None
-    decoded_data = bech32m.convertbits(data[:], 5, 8, False)
-    decoded_string_in_output_format = bech32m.output_format_fn(decoded_data, out_form)
-    return decoded_string_in_output_format
-
-def main():
-    encode_pure_bech32m("abcdef","q83v", "-b64")
-    encode_pure_bech32m("abcdef", b'\xab\xcd\xef', "raw")
-    encode_pure_bech32m("abcdef", "101010111100110111101111", "-bin")  #raw bytes
-    encode_pure_bech32m("abcdef", "abcdef", "-hex")
-    encode_pure_bech32m("test", "766563746f72", "-hex")
-    encode_pure_bech32m("a","", "-hex")
-    encode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1","", "-hex")
-    encode_pure_bech32m("abcdef","ffbbcdeb38bdab49ca307b9ac5a928398a418820", "-hex")
-    encode_pure_bech32m("?","", "-hex")
-    encode_pure_bech32m("split", "c5f38b70305f519bf66d85fb6cf03058f3dde463ecd7918f2dc743918f2d", "-hex")  #case of unaligend input
-    #encode_pure_bech32m("1","ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0")
-
-    ascii_format=encode_pure_bech32m( "?","abczzzzzz", "ascii")
-    print("ascii format=", ascii_format)
-
-    base64data=encode_pure_bech32m("split","xfOLcDBfUZv2bYX7bPAwWPPd5GPs15GPLcdDkY8t", "-b64")
-    print("base64 data=",base64data)
-
-    str=bech32m.read_file("test.txt")
-    encoded_data=encode_pure_bech32m("abcdef",str, "-hex")
-    print("Encode from file=", encoded_data)
-
-    bech32m.write_file("encoded_test.txt", encoded_data)
+        return hrp, data[:-6]
 
 
+# to encode pure bech32m
+def encode_pure_bech32m(hrp, input_str, in_format, out_format):
+    if not validate_str_for_encoding(hrp.lower(), input_str, in_format):
+        sys.exit(0)
+    else:
+        validated_str = validate_str_for_encoding(hrp.lower(), input_str, in_format)
+        bits_converted = bech32m.convertbits(validated_str, 8, 5, True)
+        combined = bits_converted + bech32m.bech32m_create_checksum(hrp.lower(), bits_converted)
+        final_ret = hrp + '1' + ''.join([CHARSET[d] for d in combined])
 
-    print("\n\n\nDecode......")
-    decode_pure_bech32m("test", "test1wejkxar0wg64ekuu","-hex")
-    decode_pure_bech32m("abcdef", "abcdef140x77khk82w","-hex")
-    decode_pure_bech32m("abcdef", "abcdef140x77khk82w", "-b64")
-    decode_pure_bech32m("a", "a1lqfn3a", "-hex")
-    decode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1", "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6", "-hex")
-    decode_pure_bech32m("abcdef", "abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx", "-hex")
-    decode_pure_bech32m("?", "?1v759aa", "-hex")
-    decode_pure_bech32m("split", "split1checkupstagehandshakeupstreamerranterredcaperredlc445v", "-hex")
-    #decode_pure_bech32m("1","11llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllludsr8")
-
-    str = bech32m.read_file("encoded_test.txt")
-    decoded_data = decode_pure_bech32m("abcdef", str, "-hex")
-    print("Decoded from file=", decoded_data)
+        return bech32m.output_format_enc(final_ret, out_format)
 
 
-if __name__=="__main__":
-    main()
+def decode_pure_bech32m(hrp, str_to_decode, input_format, out_form):
+    if validate_hrp(hrp):
+        if not validate_str_for_decoding(str_to_decode, input_format):
+            sys.exit(0)
+        else:
+            hrpgot, data = validate_str_for_decoding(str_to_decode, input_format)
+            if hrpgot != hrp.lower():
+                print("Invalid HRP provided for decoding, Does not match with HRP calculated from string")
+                return None
+            else:
+                decoded_data = bech32m.convertbits(data[:], 5, 8, True)
+                list_to_hex = ([hex(x).lstrip("0x") for x in decoded_data])
+                decoded_str_in_hex = ''.join(map(str, list_to_hex))
+                decoded_string_in_output_format = bech32m.output_format_dec(decoded_str_in_hex, out_form)
+
+                return decoded_string_in_output_format
+    else:
+        sys.exit(0)
+
 
 
