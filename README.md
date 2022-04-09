@@ -43,9 +43,14 @@ Enter output file name (press enter to print output to "stdout") :  <output file
 The tool uses naive approach to detect errors in bech32m string input for decoding and suggest the correct string. This has been done by iterating over possible symbols from bech32m character set and checking for valid checksum after each iteration. The tool cannot error of more than one character. Also, the Human Readable Part is assumed to be correct in error detection and correction as same is validated first during decoding process. Colour coded characters are shown for error (red) and correction (green) for which colorama has been used. Example:
 
 $ python cli.py dec test -s test1zy3rx9zgu9r
+  
 >Checksum Failed
+  
 >Checking for Corrections in Input String
+  
 >Incorrect Character Found: test1zy3rx9zgu9r
+  
 >Correct Character is: z
+  
 >Correct String is: test1zy3rxzzgu9r 
 
