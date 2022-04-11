@@ -28,7 +28,6 @@ class Testenc_dec(unittest.TestCase):
         self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", "q83v", "b64", "b64"),"YWJjZGVmMTQweDc3a2hrODJ3")
         self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", "q83v", "b64", "bin"),b'abcdef140x77khk82w')
 
-        self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", b'\xab\xcd\xef', "bin", "bech32m"),"abcdef140x77khk82w")
         self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", "abcdef", "hex", "bech32m"),"abcdef140x77khk82w")
 
         self.assertEqual(enc_dec.encode_pure_bech32m("a", "", "hex", "bech32m"),"a1lqfn3a")
