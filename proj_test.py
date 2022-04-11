@@ -95,7 +95,61 @@ class Testenc_dec(unittest.TestCase):
         self.assertEqual(enc_dec.encode_pure_bech32m("test", b'vector', "bin", "bech32m"), "test1wejkxar0wg64ekuu")
         self.assertEqual(enc_dec.encode_pure_bech32m("test", "dmVjdG9y", "b64", "bech32m"), "test1wejkxar0wg64ekuu")
 
+    def test_decode_pure_bech32m(self):
+        """Test whether bech32m decoding takes place correctly on user input"""
 
+        
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v93xx7n60fa857sqycgct", "bech32m", "hex"),"6162637a7a7a7a7a7a")
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v93xx7n60fa857sqycgct", "bech32m","b64"),"YWJjenp6enp6")
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v93xx7n60fa857sqycgct", "bech32m","bin"),b'abczzzzzz')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("test", "test1wejkxar0wg64ekuu", "bech32m", "hex"),"766563746f72")
+        self.assertEqual(enc_dec.decode_pure_bech32m("test", "test1wejkxar0wg64ekuu", "bech32m", "hex"),"766563746f72")
+        self.assertEqual(enc_dec.decode_pure_bech32m("test", "test1wejkxar0wg64ekuu", "bech32m", "b64"),"dmVjdG9y")
+        self.assertEqual(enc_dec.decode_pure_bech32m("test", "test1wejkxar0wg64ekuu","bech32m", "bin"),b'vector')
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef140x77khk82w", "bech32m", "hex"),"abcdef")
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef140x77khk82w", "bech32m","hex"),"abcdef")
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef140x77khk82w", "bech32m","b64"),"q83v")
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef140x77khk82w", "bech32m","bin"),b'\xab\xcd\xef')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("a", "a1lqfn3a", "bech32m", "hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("a", "a1lqfn3a", "bech32m","hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("a", "a1lqfn3a","bech32m", "b64"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("a", "a1lqfn3a", "bech32m","bin"),b'')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("A", "A1LQFN3A", "bech32m", "hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("A", "A1LQFN3A", "bech32m","hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("A", "A1LQFN3A", "bech32m","b64"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("A", "A1LQFN3A", "bech32m","bin"),b'')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1",
+                        "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+                        "bech32m", "hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1",
+                        "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+                        "bech32m","hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1",
+                        "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+                        "bech32m","b64"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber1",
+                        "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+                        "bech32m","bin"),b'')
+
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx", "bech32m","hex"),"ffbbcdeb38bdab49ca307b9ac5a928398a418820")
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx", "bech32m","b64"),"/7vN6zi9q0nKMHuaxakoOYpBiCA=")
+        self.assertEqual(enc_dec.decode_pure_bech32m("abcdef", "abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx", "bech32m","bin"),b'\xff\xbb\xcd\xeb8\xbd\xabI\xca0{\x9a\xc5\xa9(9\x8aA\x88 ')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v759aa", "bech32m","hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v759aa", "bech32m","hex"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v759aa", "bech32m","b64"),"")
+        self.assertEqual(enc_dec.decode_pure_bech32m("?", "?1v759aa", "bech32m","bin"),b'')
+
+        self.assertEqual(enc_dec.decode_pure_bech32m("split", "split1checkupstagehandshakeupstreamerranterredcaperredlc445v", "bech32m","hex"),"c5f38b70305f519bf66d85fb6cf03058f3dde463ecd7918f2dc743918f2d")
+        self.assertEqual(enc_dec.decode_pure_bech32m("split", "split1checkupstagehandshakeupstreamerranterredcaperredlc445v","bech32m", "b64"),"xfOLcDBfUZv2bYX7bPAwWPPd5GPs15GPLcdDkY8t")
+        self.assertEqual(enc_dec.decode_pure_bech32m("split", "split1checkupstagehandshakeupstreamerranterredcaperredlc445v", "bech32m","bin"),b'\xc5\xf3\x8bp0_Q\x9b\xf6m\x85\xfbl\xf00X\xf3\xdd\xe4c\xec\xd7\x91\x8f-\xc7C\x91\x8f-')
+    
+    
     def test_invalid_hrp(self):
         """Test whether given hrp in invalid"""
         for hrp in INVALID_HRP:
