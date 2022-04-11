@@ -43,8 +43,7 @@ class Testenc_dec(unittest.TestCase):
 
         self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", "ffbbcdeb38bdab49ca307b9ac5a928398a418820", "hex", "bech32m"),"abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx")
         self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", "/7vN6zi9q0nKMHuaxakoOYpBiCA=", "b64", "bech32m"),"abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx")
-        self.assertEqual(enc_dec.encode_pure_bech32m("abcdef", b'\xff\xbb\xcd\xeb\x38\xbd\xab\x49\xca\x30\x7b\x9a\xc5\xa9\x28\x39\x8a\x41\x88\x20',
-                        "bin", "bech32m"),"abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx")
+
 
         self.assertEqual(enc_dec.encode_pure_bech32m("?", "", "hex", "bech32m"),"?1v759aa")
         self.assertEqual(enc_dec.encode_pure_bech32m("?", "", "b64", "bech32m"),"?1v759aa")
@@ -52,9 +51,6 @@ class Testenc_dec(unittest.TestCase):
 
         self.assertEqual(enc_dec.encode_pure_bech32m("split", "c5f38b70305f519bf66d85fb6cf03058f3dde463ecd7918f2dc743918f2d", "hex", "bech32m"),"split1checkupstagehandshakeupstreamerranterredcaperredlc445v")
         self.assertEqual(enc_dec.encode_pure_bech32m("split", "xfOLcDBfUZv2bYX7bPAwWPPd5GPs15GPLcdDkY8t", "b64", "bech32m"),"split1checkupstagehandshakeupstreamerranterredcaperredlc445v")
-        self.assertEqual(enc_dec.encode_pure_bech32m("split",
-                        b'\xc5\xf3\x8b\x70\x30\x5f\x51\x9b\xf6\x6d\x85\xfb\x6c\xf0\x30\x58\xf3\xdd\xe4\x63\xec\xd7\x91\x8f\x2d\xc7\x43\x91\x8f\x2d',
-                        "bin", "bech32m"),"split1checkupstagehandshakeupstreamerranterredcaperredlc445v")
 
 
         self.assertEqual(enc_dec.encode_pure_bech32m("A", "", "hex", "bech32m"),"A1lqfn3a")
