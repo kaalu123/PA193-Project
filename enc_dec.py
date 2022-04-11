@@ -1,12 +1,19 @@
-import bech32m
 import sys
+import bech32m
 from colorama import init, Fore, Style
+
 
 init(autoreset=True)  # Initializes colorama
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
 
 def validate_hrp(hrp):
+    """
+    validates the entered human-readable part for encoding/decoding a string
+    :param hrp: valid ascii string
+    :return: True if hrp meets the criteria specified else False
+    """
+
     if hrp == "":
         print("HRP cannot be null/empty")
         return False
@@ -24,6 +31,14 @@ def validate_hrp(hrp):
 
 
 def validate_str_for_encoding(hrp, input_str, input_format):
+    """
+    validates a string for encoding and return validated string
+    :param hrp: string to specify Human-readable part
+    :param input_str: string to be encoded
+    :param input_format: input format of string to be encoded
+    :return: raw bytes of validated string
+    """
+
     if validate_hrp(hrp):
 
         if input_format == "hex":
@@ -46,6 +61,7 @@ def validate_str_for_encoding(hrp, input_str, input_format):
         elif input_format == "bin":
             if bech32m.check_if_str_is_bin(input_str) or input_str == "":
                 validated_str = input_str
+
                 return validated_str
             else:
                 print("Invalid bin String")
@@ -58,6 +74,13 @@ def validate_str_for_encoding(hrp, input_str, input_format):
 
 
 def detect_errors(hrp, data_str):
+    """
+    detect errors in string to be decoded and find corrections (upto one symbol/character)
+    :param hrp: string specifying human-readable part
+    :param data_str: bech32m encoded string to be checked for error detection and correction
+    :return: corrected bech32m string
+    """
+
     print("Checking for Corrections in Input String")
     for i in range(0, len(data_str)):
         check_char = data_str[i]
@@ -76,6 +99,12 @@ def detect_errors(hrp, data_str):
 
 
 def print_corrections(input_str, correct_str):
+    """
+    function prints the incorrect character in string and suggested correct character and string
+    :param input_str: string in which error was detected
+    :param correct_str: correct string returned by detec_errors() function
+    """
+
     if correct_str is None:
         print("Correct Character Not Found. Possibly more than one incorrect character in input string")
         sys.exit(0)
@@ -96,6 +125,14 @@ def print_corrections(input_str, correct_str):
 
 
 def validate_str_for_decoding(input_str, input_format):
+    """
+    validates a bech32m string for decoding
+    :param input_str: bech32m string
+    :param input_format: string specifying encoding of bech32m string (hex/bin/b64)
+    :return: hrp (string) and data part without the checksum
+    """
+
+
     if input_str == "":
         print("Input string cannot be empty for decoding")
         sys.exit(0)
@@ -161,7 +198,17 @@ def validate_str_for_decoding(input_str, input_format):
 
 # to encode pure bech32m
 def encode_pure_bech32m(hrp, input_str, in_format, out_format):
-    if not validate_str_for_encoding(hrp.lower(), input_str, in_format):
+    """
+    encode an arbitrary string to bech32m
+    :param hrp: string specifying human readable part
+    :param input_str: string to be encoded
+    :param in_format: string specifying input format (bin/hex/b64)
+    :param out_format: string specifying output format (bin/hex/b64)
+    :return: bech32m encoded string in out_format
+    """
+
+
+    if validate_str_for_encoding(hrp.lower(), input_str, in_format) is False:
         sys.exit(0)
     else:
         validated_str = validate_str_for_encoding(hrp.lower(), input_str, in_format)
@@ -173,8 +220,17 @@ def encode_pure_bech32m(hrp, input_str, in_format, out_format):
 
 
 def decode_pure_bech32m(hrp, str_to_decode, input_format, out_form):
+    """
+    decode a bech32m string and return in output format
+    :param hrp: string specifying human-readable part
+    :param str_to_decode: bech32m string to be decoded
+    :param input_format: string specifying input encoding of bech32m string
+    :param out_form: string specifying output encoding of decoded string
+    :return: decoded bech32m string in specified output format
+    """
+
     if validate_hrp(hrp):
-        if not validate_str_for_decoding(str_to_decode, input_format):
+        if validate_str_for_decoding(str_to_decode, input_format) is False:
             sys.exit(0)
         else:
             hrpgot, data = validate_str_for_decoding(str_to_decode, input_format)
@@ -190,6 +246,4 @@ def decode_pure_bech32m(hrp, str_to_decode, input_format, out_form):
                 return decoded_string_in_output_format
     else:
         sys.exit(0)
-
-
 
