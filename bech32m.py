@@ -95,18 +95,18 @@ def check_if_str_is_base64(check_str):
     if check_str == "":
         return True
 
-    if type(check_str) is not str:
+    elif type(check_str) is not str:
         print("Input given not a string. If input is raw bytes, select -bin as input format")
         return False
 
-    if len(check_str) % 4 != 0:
+    elif len(check_str) % 4 != 0:
         print("Invalid length of base 64 string. Check input string and input format")
         return False
 
-    if not all(x in base64_charset for x in check_str):
-
+    elif not all(x in base64_charset for x in check_str):
         print("Non base64 Character Entered in String")
         return False
+
     else:
         return True
 
@@ -122,17 +122,18 @@ def check_if_str_is_hex(check_str):
     if check_str == "":
         return True
 
-    if type(check_str) is not str:
+    elif type(check_str) is not str:
         print("Input given not a string. If input is raw bytes, select \"bin\" as input format")
         return False
 
-    if len(check_str) % 2 != 0:
+    elif len(check_str) % 2 != 0:
         print("Invalid Length of Hex String")
         return False
 
-    if not all(x in hex_charset for x in check_str):
+    elif not all(x in hex_charset for x in check_str):
         print("Non Hex Character Entered in String")
         return False
+
     else:
         return True
 
@@ -143,15 +144,27 @@ def check_if_str_is_bin(check_str):
     :param check_str: string to be checked
     :return: true if string is raw bytes else false
     """
+    try:
+        b = (check_str.decode()).encode()
 
-    if check_str[2:] == "b'" :
+        if type(check_str) is not bytes:
+            return False
+        elif b != check_str:
+            return False
+        else:
+            return True
+
+    except AttributeError:
+        print("Invalid binary string")
         return False
-    else:
-        return True
 
 
 def ascii_to_hex(ascii_str):
-    """convert any ascii string to hexadecimal"""
+    """
+    convert any ascii string to hexadecimal
+    :param ascii_str: ascii string to be converted to hex
+    :return: hex encoded ascii string
+    """
 
     hexa = ""
     for i in range(len(ascii_str)):
@@ -190,26 +203,58 @@ def base64_to_hex(base64_str):
     return decoded_str
 
 
+def hex_to_base64(hex_str):
+    """
+    convert hex encoded string to base64 encoded string
+    :param hex_str: hexadecimal string to be converted
+    :return: base64 encoded string
+    """
+
+    decoded_str = base64.b64encode(bytes.fromhex(hex_str)).decode()
+    return decoded_str
+
+
 def hex_to_raw(hex_str):
-    """convert hex string to raw bytes"""
+    """
+    convert hex string to raw bytes
+    :param hex_str:
+    :return: raw bytes
+    """
 
     return binascii.unhexlify(hex_str)
 
 
 def raw_to_hex(raw_str):
-    """convert raw bytes to hex string"""
+    """
+    convert raw bytes to hex string
+    :param raw_str: raw bytes
+    :return: hexadecimal string
+    """
 
     return binascii.hexlify(raw_str)
 
 
 def str_to_base64(sample_string):
-    sample_string_bytes = sample_string.encode("ascii")
+    """
+    convert any ascii string to base64 encoding
+    :param sample_string: ascii string to be encoded to base 64
+    :return: base64 encoded string
+    """
+
+    sample_string_bytes = sample_string.encode()
     base64_bytes = base64.b64encode(sample_string_bytes)
-    base64_string = base64_bytes.decode("ascii")
+    base64_string = base64_bytes.decode()
     return base64_string
 
 
 def output_format_enc(bech32_str, out_format):
+    """
+    convert the encoded bech32m string to desired(hex/b64/bin) output format
+    :param bech32_str: valid bech32m encoded string
+    :param out_format: output format for encoded string
+    :return: bech32m string encoded in output format (hex/b64/bin)
+    """
+
     if out_format == "bech32m":
         return bech32_str
 
@@ -225,29 +270,42 @@ def output_format_enc(bech32_str, out_format):
 
     else:
         print("Invalid Output Format. Please Specify hex, b64 or bin")
+        sys.exit(0)
 
 
 def output_format_dec(hex_str, out_format):
+    """
+    convert the decoded string to desired(hex/b64/bin) output format
+    :param hex_str: hex string generated after decoding a bech32m string
+    :param out_format: output format for decoded string
+    :return: decoded string in required encoding (hex/b64/bin)
+    """
+
     if out_format == "hex":
         return hex_str
     elif out_format == "b64":
-        return str_to_base64(hex_str)
-
+        return hex_to_base64(hex_str)
     elif out_format == "bin":
         return hex_to_raw(hex_str)
     else:
         print("Invalid Output Format. Please Specify hex, b64 or bin")
 
 
-def read_file(input_file_name, input_format="hex"):
+def read_file(input_file_name, input_format):
+    """
+    read encoded/decoded string/bytes from file as per input format
+    :param input_file_name: file name from which input string/bytes are to be read
+    :param input_format: bin/hex/b64
+    :return: string/bytes as per specified input format
+    """
+
     try:
 
         if input_format == "bin":
-            mode = "r"
+            mode = "rb"
         else:
             mode = "r"
         with open(input_file_name, mode) as f:
-
             input_data = f.read()
 
         if not input_data:
@@ -261,6 +319,14 @@ def read_file(input_file_name, input_format="hex"):
 
 
 def write_file(output_file_name, output_data, output_format):
+    """
+    write encoded/decoded string/bytes to file as per output format
+    :param output_file_name: file name to which string/bytes are to be written
+    :param output_data:
+    :param output_format:
+    :return:
+    """
+
     try:
         if output_format == "bin":
             mode = "wb"
