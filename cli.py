@@ -1,24 +1,34 @@
 import sys
+import argparse
 import bech32m
 import enc_dec
-import argparse
-import binascii
 
 
 def user_interface():
+    """
+    provides cli and stdin/stdout options to user for encoding/decoding
+    :return: mode, hrp, input_string, infile, input_format, output_format, outfile
+    """
+
     if len(sys.argv) > 1:
         my_parser = argparse.ArgumentParser(description='Bech32m Encoder/Decoder')
         my_parser.add_argument('m', type=str, help='encode/decode', choices=['enc', 'dec'])
         my_parser.add_argument('hrp', type=str, help='human readable part[ASCII]')
         group = my_parser.add_mutually_exclusive_group(required=True)
-        group.add_argument('-s', help='input string to be encoded/decoded')
-        group.add_argument('-inf', help='input file to read string to be encoded/decoded')
+        group.add_argument('-s', type=str, help='input string to be encoded/decoded')
+        group.add_argument('-inf', type=str, help='input file to read string to be encoded/decoded')
         my_parser.add_argument('-iform', type=str, choices=['hex', 'bin', 'b64'], help='input format')
         my_parser.add_argument('-oform', type=str, choices=['hex', 'bin', 'b64'], help='output format')
         my_parser.add_argument('-of', type=str, help='output file path to write encoded/decoded string')
         args = my_parser.parse_args()
 
-        return args.m, args.hrp, args.s, args.inf, args.iform, args.oform, args.of
+        if args.s is not None and args.iform == "bin":
+            args_s = args.s
+            args_str = args_s.encode()
+        else:
+            args_str = args.s
+
+        return args.m, args.hrp, args_str, args.inf, args.iform, args.oform, args.of
 
     if len(sys.argv) == 1:
         print("Default Interface Stdin Selected")
@@ -58,6 +68,11 @@ def user_interface():
                 while not input_string and mode == "dec":
                     print("Empty String Cannot be decoded")
                     input_string = input("Enter the input string:")
+
+            if input_format == "bin":
+                #input_string = bytes(input_string, 'utf-8')
+                input_string = input_string.encode()
+
         else:                                                          #if file name is provided read string from file
             while not bech32m.read_file(infile, input_format):
                 infile = input("Enter input file name:")
@@ -75,8 +90,9 @@ def user_interface():
 
         if input_format == "bin":
             while not bech32m.check_if_str_is_bin(input_string):
-                input_string = input("Enter valid \"bin\" input string:")
-
+                input_string_s = input("Enter valid \"bin\" input string:")
+                #input_string = bytes(input_string_s, 'utf-8')
+                input_string = input_string_s.encode()
 
         #input output format and validate
         output_format = input("Choose output Format[b64/bin/hex]"
@@ -114,8 +130,7 @@ def main():
 
         print("Mode:", mode, "HRP:", hrp, "Input String:", input_string, "Input Format:", input_format,
               "Output Format:", output_format)
-        if input_format == "bin":
-            input_string = bytes(input_string, 'utf-8')
+
         encoded_string = enc_dec.encode_pure_bech32m(hrp, input_string, input_format, output_format)
 
         if not output_file:
@@ -136,9 +151,6 @@ def main():
         print("Mode:", mode, "HRP:", hrp, "Input String:", input_string, "Input Format:", input_format,
               "Output Format:", output_format, "Input File:", input_file, "Output File:", output_file)
 
-        if input_format == "bin":
-            input_string = bytes(input_string, 'utf-8')
-
         decoded_string = enc_dec.decode_pure_bech32m(hrp, input_string, input_format, output_format)
 
         if not output_file:
@@ -151,3 +163,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
