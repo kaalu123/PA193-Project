@@ -142,7 +142,7 @@ def check_if_str_is_bin(check_str):
     """
     check if input string has raw bytes
     :param check_str: string to be checked
-    :return: true if string is raw bytes else false
+    :return: True if string is raw bytes else False
     """
     return isinstance(check_str, bytes)
 
