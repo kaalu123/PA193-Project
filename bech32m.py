@@ -142,21 +142,9 @@ def check_if_str_is_bin(check_str):
     """
     check if input string has raw bytes
     :param check_str: string to be checked
-    :return: true if string is raw bytes else false
+    :return: True if string is raw bytes else False
     """
-    try:
-        b = (check_str.decode()).encode()
-
-        if type(check_str) is not bytes:
-            return False
-        elif b != check_str:
-            return False
-        else:
-            return True
-
-    except AttributeError:
-        print("Invalid binary string")
-        return False
+    return isinstance(check_str, bytes)
 
 
 def ascii_to_hex(ascii_str):
